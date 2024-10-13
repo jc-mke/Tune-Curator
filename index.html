@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Tune Curator</title>
+    <script src="src/script.ts" type="module"></script>
+    <link href="dist/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-black text-white p-4">
+    <nav class="mb-4">
+        <ul class="flex items-center">
+            <li class="flex items-center">
+                <span id="avatar" class="mr-2"></span>
+                <span id="displayName" class="font-serif"></span>
+            </li>
+        </ul>
+    </nav>
+    <section>
+        <header class="text-xl font-semibold font-serif mb-6 text-center">Your Recommended Artists</header>
+        <div class="flex flex-wrap justify-center max-w-6xl mx-auto">
+            <div class="artistContainer" role="artistOne"></div>
+            <div class="artistContainer" role="artistTwo"></div>
+            <div class="artistContainer" role="artistThree"></div>
+            <div class="artistContainer" role="artistFour"></div>
+            <div class="artistContainer" role="artistFive"></div>
+        </div>
+    </section>
+</body>
+
+</html>
