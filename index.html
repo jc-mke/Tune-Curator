@@ -18,6 +18,38 @@
         </ul>
     </nav>
     <section>
+    <header class="text-xl font-semibold font-serif mb-6 text-center">Retrieve New Recommendations</header>
+    <form class="flex flex-col items-center border-2 border-white p-5 rounded-none shadow-lg" action="" method="post">
+            <div class="border-2 border-white p-5 rounded-none shadow-lg mb-5">
+                <fieldset>
+                    <legend class="font-bold mb-3">Recommendations based on:</legend>
+                    <div class="flex flex-col space-y-2">
+                        <div>
+                            <input type="radio" name="recommendations-seed" id="top-artists-seed" value="top-artists" class="mr-2">
+                            <label for="top-artists-seed">Top Artists</label>
+                        </div>
+        
+                        <div>
+                            <input type="radio" name="recommendations-seed" id="top-tracks-seed" value="top-tracks" class="mr-2">
+                            <label for="top-tracks-seed">Top Tracks</label>
+                        </div>
+        
+                        <div>
+                            <input type="radio" name="recommendations-seed" id="recent-genres-seed" value="recent-genres" class="mr-2">
+                            <label for="recent-genres-seed">Recent Genres</label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+                
+            <div class="relative text-center">
+                <label for="popularity" class="absolute left-0 -top-6 font-bold">Underground</label>
+                <input type="range" id="popularity" name="popularity" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
+                <label for="popularity" class="absolute right-0 -top-6 font-bold">Mainstream</label>
+            </div>
+    </form>
+    </section>
+    <section>
         <header class="text-xl font-semibold font-serif mb-6 text-center">Your Recommended Artists</header>
         <div class="flex flex-wrap justify-center max-w-6xl mx-auto">
             <div class="artistContainer" role="artistOne"></div>
