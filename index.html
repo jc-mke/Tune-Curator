@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
     <title>Tune Curator</title>
     <script src="src/script.ts" type="module"></script>
     <link href="dist/style.css" rel="stylesheet">
@@ -18,8 +18,8 @@
         </ul>
     </nav>
     <section>
-    <header class="text-xl font-semibold font-serif mb-6 text-center">Retrieve New Recommendations</header>
-    <form class="flex flex-col items-center border-2 border-white p-5 rounded-none shadow-lg" action="" method="post">
+    <form class="flex flex-col items-center" id="recommendations-form" action="" method="post">
+        <header class="text-xl font-semibold font-serif mb-6 text-center">Retrieve New Recommendations</header>
             <div class="border-2 border-white p-5 rounded-none shadow-lg mb-5">
                 <fieldset>
                     <legend class="font-bold mb-3">Recommendations based on:</legend>
@@ -42,11 +42,37 @@
                 </fieldset>
             </div>
                 
-            <div class="relative text-center">
-                <label for="popularity" class="absolute left-0 -top-6 font-bold">Underground</label>
+            <div class="relative text-center mt-8">
+                <label for="popularity" class="absolute -left-6 -top-6 font-bold">Underground</label>
                 <input type="range" id="popularity" name="popularity" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
-                <label for="popularity" class="absolute right-0 -top-6 font-bold">Mainstream</label>
+                <label for="popularity" class="absolute -right-6 -top-6 font-bold">Mainstream</label>
             </div>
+
+            <div class="relative text-center mt-8">
+                <label for="loudness" class="absolute -left-3 -top-6 font-bold">Quiet</label>
+                <input type="range" id="loudness" name="loudness" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
+                <label for="loudness" class="absolute -right-3 -top-6 font-bold">Loud</label>
+            </div>
+
+            <div class="relative text-center mt-8">
+                <label for="danceability" class="absolute -left-5 -top-6 font-bold">Not Danceable</label>
+                <input type="range" id="danceability" name="danceability" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
+                <label for="danceability" class="absolute -right-5 -top-6 font-bold">Danceable</label>
+            </div>
+
+            <div class="relative text-center mt-8">
+                <label for="energy" class="absolute -left-5 -top-6 font-bold">Chill</label>
+                <input type="range" id="energy" name="energy" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
+                <label for="energy" class="absolute -right-5 -top-6 font-bold">Energetic</label>
+            </div>
+
+            <div class="relative text-center mt-8">
+                <label for="instrumentalness" class="absolute -left-5 -top-6 font-bold">Instrumental</label>
+                <input type="range" id="instrumentalness" name="instrumentalness" min="0" max="1" step="0.1" class="w-72 h-2 bg-gray-300 rounded-lg appearance-none mx-5">
+                <label for="instrumentalness" class="absolute -right-5 -top-6 font-bold">Vocal-Based</label>
+            </div>
+
+            <button class="transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6" type="submit">Submit</button>
     </form>
     </section>
     <section>

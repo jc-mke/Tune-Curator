@@ -80,14 +80,27 @@ export async function fetchArtistsFromArtistIds(token: string, recommendedArtist
     return artistsByIds;
 }
 
-async function verifyTokenExists(token: string) {
+export async function handleFormSubmit() {
+    const form = document.getElementById('recommendations-form') as HTMLFormElement;
+
+    form?.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        for (const [key, value] of formData.entries()) {
+            console.log(key, value);
+          }
+    })
+}
+
+async function verifyTokenExists(token: string): Promise<void> {
     if (!token) {
         console.error('Access token does not exist');
         throw new Error('Access token does not exist');
     }
 }
 
-async function verify200Response(response: Response, requestType: string) {
+async function verify200Response(response: Response, requestType: string): Promise<void> {
     if (!response.ok) {
         const errorData = await response.json();
         console.error(`Error fetching ${requestType}: ${JSON.stringify(errorData)}`);
