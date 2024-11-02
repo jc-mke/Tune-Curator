@@ -1,27 +1,34 @@
 // src/components/RecommendationsForm.tsx
 import React, { useState } from 'react';
+import Form from '../classes/Form';
+import fetchArtistRecommendations from '../service/SpotifyService';
 
 const RecommendationsForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    recommendationsSeed: '',
-    popularity: 0.5,
-    loudness: 0.5,
-    danceability: 0.5,
-    energy: 0.5,
-    instrumentalness: 0.5,
-  });
+  const [formData, setFormData] = useState<Form>(
+    new Form('', 0.5, 0.5, 0.5, 0.5, 0.5)
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name.includes('range') ? parseFloat(value) : value,
-    }));
+    const { name, value, type } = e.target;
+    const parsedValue = type === 'range' ? parseFloat(value) : value;
+
+    // Use spread syntax to create a new instance of Form with updated values
+    setFormData((prevForm) => {
+      return new Form(
+        name === 'recommendationsSeed' ? (parsedValue as string) : prevForm.recommendationsSeed,
+        name === 'popularity' ? (parsedValue as number) : prevForm.popularity,
+        name === 'loudness' ? (parsedValue as number) : prevForm.loudness,
+        name === 'danceability' ? (parsedValue as number) : prevForm.danceability,
+        name === 'energy' ? (parsedValue as number) : prevForm.energy,
+        name === 'instrumentalness' ? (parsedValue as number) : prevForm.instrumentalness
+      );
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData); // TODO: Handle form submission logic
+    console.log(formData);
+    fetchArtistRecommendations(formData);
   };
 
   return (
