@@ -1,3 +1,8 @@
+interface AccessTokenResponse {
+    access_token: string;
+    refresh_token: string;
+}
+
 interface UsersTopItems {
     items: TopArtist[] | TopTrack[];
 }

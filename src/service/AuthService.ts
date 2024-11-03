@@ -1,3 +1,5 @@
+const accessTokenURI = 'https://accounts.spotify.com/api/token';
+
 export async function redirectToAuthCodeFlow(clientId: string) {
     const verifier = generateCodeVerifier(128);
     const challenge = await generateCodeChallenge(verifier);
@@ -17,7 +19,7 @@ export async function redirectToAuthCodeFlow(clientId: string) {
     window.location.href = authUrl.toString();
 }
 
-export async function getAccessToken(clientId: string, authorizationCode: string) {
+export async function getAccessToken(clientId: string, authorizationCode: string): Promise<AccessTokenResponse> {
     const verifier = localStorage.getItem('code_verifier');
     console.log('AUTHORIZATION CODE: ' + authorizationCode);
 
@@ -35,13 +37,40 @@ export async function getAccessToken(clientId: string, authorizationCode: string
         }),
       }
 
-    const body = await fetch('https://accounts.spotify.com/api/token', payload);
+    const body = await fetch(accessTokenURI, payload);
     const response = await body.json();
 
     
     console.log(`ACCESS TOKEN RESPONSE: ${JSON.stringify(response)}`);
 
     return response; 
+}
+
+export async function getRefreshedToken(): Promise<void> {
+  const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID as string;
+  const refreshToken = localStorage.getItem('spotify_refresh_token');
+  if (!refreshToken) {
+    throw new Error('Refresh token is not present');
+  }
+
+  const payload = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken!,
+      client_id: clientId!
+    }),
+  }
+
+  const body = await fetch(accessTokenURI, payload);
+  const response = await body.json() as AccessTokenResponse;
+  localStorage.setItem('spotify_access_token', response.access_token);
+  if (response.refresh_token) {
+    localStorage.setItem('spotify_refresh_token', response.access_token);
+  }
 }
 
 export function generateCodeVerifier(length: number) {
