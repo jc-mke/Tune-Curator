@@ -1,7 +1,6 @@
 import Form from '../classes/Form';
 import NoTopItemsError from '../classes/errors/NoTopItemsError';
 import ValidationError from '../classes/errors/ValidationError';
-import { getRefreshedToken } from './AuthService';
 
 const token = localStorage.getItem('spotify_access_token');
 const usersTopItemsBaseURI = 'https://api.spotify.com/v1/me/top/';
@@ -32,15 +31,13 @@ async function retrieveRecommendationsSeedValues(form: Form): Promise<string> {
 
 async function retrieveTopArtistIds(): Promise<string> {
     verifyTokenExists();
-    console.log('TOKEN: ' + token);
     try {
         const url = `${usersTopItemsBaseURI}artists`
         const options = {
             method: 'GET',
             headers: {'Authorization': `Bearer ${token}`}
         }
-        const response = await fetchTopItemsWithRetry(url, options);
-
+        let response = await fetch(url, options);
         const topArtistsResponse = await response!.json() as UsersTopItems;
         console.log('TOP ARTISTS RESPONSE: ' + JSON.stringify(topArtistsResponse));
         let topArtistsItems = topArtistsResponse.items;
@@ -62,7 +59,7 @@ async function retrieveTopTrackIds(): Promise<string> {
             method: 'GET',
             headers: {'Authorization': `Bearer ${token}`}
         }
-        const response = await fetchTopItemsWithRetry(url, options);
+        let response = await fetch(url, options);
         const topTracksResponse = await response!.json() as UsersTopItems; 
         console.log('TOP TRACKS RESPONSE: ' + JSON.stringify(topTracksResponse));
         let topTracksItems = topTracksResponse.items;
@@ -85,8 +82,7 @@ async function retrieveTopGenres(): Promise<string> {
             method: 'GET',
             headers: {'Authorization': `Bearer ${token}`}
         }
-        const response = await fetchTopItemsWithRetry(url, options);
-
+        let response = await fetch(url, options);
         const topArtistsResponse = await response!.json() as UsersTopItems;
         console.log('TOP ARTISTS RESPONSE: ' + JSON.stringify(topArtistsResponse));
         let topArtistsItems = topArtistsResponse.items as TopArtist[];
@@ -110,42 +106,6 @@ async function verifyTokenExists(): Promise<void> {
         console.error('Access token does not exist');
         throw new Error('Access token does not exist');
     }
-}
-
-async function fetchTopItemsWithRetry(url: string, options: RequestInit, retry = true): Promise<Response | undefined> {
-try {
-    let response = await fetch(url, options);
-
-    if (response.status === 401 && retry) {
-        console.log('Access token expired, refreshing token and retrying...');
-        const refreshedToken = await refreshSpotifyToken();
-        if (!refreshedToken) throw new Error('Failed to refresh token');
-
-        const headers = new Headers();
-        headers.set('Authorization', `Bearer ${refreshedToken}`);
-        response = await fetch(url, {
-            method: 'GET',
-            headers: headers
-        });
-
-        if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}`);
-        }
-
-
-        return response;
-    }
-} catch (error) {
-    console.error('Error when calling the Spotify API: ', error);
-    throw error;
-}
-return undefined;
-}
-
-async function refreshSpotifyToken(): Promise<string | null> {
-    await getRefreshedToken();
-    const refreshedToken = localStorage.getItem('spotify_access_token');
-    return refreshedToken;
 }
 
 async function verifyTopItemsIsPopulated(items: TopArtist[] | TopTrack[], topItemType: string): Promise<void> {

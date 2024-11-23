@@ -1,19 +1,20 @@
 // src/App.tsx
 import React from 'react';
-import { AuthProvider } from './context/AuthContext';
+import SpotifyAuthButton from './components/SpotifyAuthButton';
 import RecommendationsForm from './components/RecommendationsForm';
-import Auth from './components/Auth';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider> {/* Wrap all other components in AuthProvider */}
+    <Router>
       <div className="bg-black text-white p-4 min-h-screen">
-        <Auth />
-        <section>
-          <RecommendationsForm />
-        </section>
+        <Routes>
+        <Route path='/' element={<SpotifyAuthButton />} />
+
+        <Route path='/form' element={<RecommendationsForm />} />
+        </Routes>
       </div>
-    </AuthProvider>
+    </Router>
   );
 };
 
