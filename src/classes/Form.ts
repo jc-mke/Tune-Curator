@@ -1,17 +1,15 @@
 class Form {
     private _recommendationsSeed: string;
     private _popularity: number; 
-    private _loudness: number;
     private _danceability: number;
     private _energy: number;
     private _instrumentalness: number; 
 
     private _recommendationsSeedList: string[] = ['top-artists', 'top-tracks', 'recent-genres'];
 
-    constructor(recommendationsSeed: string, popularity: number, loudness: number, danceability: number, energy: number, instrumentalness: number) {
+    constructor(recommendationsSeed: string, popularity: number, danceability: number, energy: number, instrumentalness: number) {
         this._recommendationsSeed = recommendationsSeed; 
         this._popularity = popularity; 
-        this._loudness = loudness;
         this._danceability = danceability; 
         this._energy = energy; 
         this._instrumentalness = instrumentalness;
@@ -38,18 +36,6 @@ class Form {
         }
         this._popularity = thePopularity;
     }
-
-    public get loudness() {
-        return this._loudness;
-    }
-
-    public set loudness(theLoudness: number) {
-        if (theLoudness < 0 || theLoudness > 1) {
-            throw new Error('loudness value must be between 0 and 1');
-        }
-        this._loudness = theLoudness;
-    }
-
 
     public get danceability() {
         return this._danceability;

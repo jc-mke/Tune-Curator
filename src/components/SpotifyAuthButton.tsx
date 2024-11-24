@@ -17,6 +17,7 @@ const SpotifyAuthButton: React.FC = () => {
       const params = new URLSearchParams(urlAfterHash.slice(1));
       const accessToken = params.get('access_token');
       if (accessToken) {
+        console.log('typeof accessToken: ' + typeof(accessToken));
         localStorage.setItem('spotify_access_token', accessToken);
 
         navigate('/form');

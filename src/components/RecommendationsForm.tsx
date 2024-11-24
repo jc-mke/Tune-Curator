@@ -5,19 +5,17 @@ import fetchArtistRecommendations from '../service/SpotifyService';
 
 const RecommendationsForm: React.FC = () => {
   const [formData, setFormData] = useState<Form>(
-    new Form('', 0.5, 0.5, 0.5, 0.5, 0.5)
+    new Form('', 0.5, 0.5, 0.5, 0.5)
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
     const parsedValue = type === 'range' ? parseFloat(value) : value;
 
-    // Use spread syntax to create a new instance of Form with updated values
     setFormData((prevForm) => {
       return new Form(
         name === 'recommendationsSeed' ? (parsedValue as string) : prevForm.recommendationsSeed,
         name === 'popularity' ? (parsedValue as number) : prevForm.popularity,
-        name === 'loudness' ? (parsedValue as number) : prevForm.loudness,
         name === 'danceability' ? (parsedValue as number) : prevForm.danceability,
         name === 'energy' ? (parsedValue as number) : prevForm.energy,
         name === 'instrumentalness' ? (parsedValue as number) : prevForm.instrumentalness
@@ -78,7 +76,7 @@ const RecommendationsForm: React.FC = () => {
       </div>
 
 {/** Range Inputs */}
-{['popularity', 'loudness', 'danceability', 'energy', 'instrumentalness'].map((field) => {
+{['popularity', 'danceability', 'energy', 'instrumentalness'].map((field) => {
   let leftLabel = '';
   let rightLabel = '';
 
@@ -86,10 +84,6 @@ const RecommendationsForm: React.FC = () => {
     case 'popularity':
       leftLabel = 'Underground';
       rightLabel = 'Mainstream';
-      break;
-    case 'loudness':
-      leftLabel = 'Quiet';
-      rightLabel = 'Loud';
       break;
     case 'danceability':
       leftLabel = 'Not Danceable';
