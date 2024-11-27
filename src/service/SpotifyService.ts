@@ -1,72 +1,90 @@
-import Form from '../classes/Form';
 import NoTopItemsError from '../classes/errors/NoTopItemsError';
 import ValidationError from '../classes/errors/ValidationError';
 
 const usersTopItemsBaseURI = 'https://api.spotify.com/v1/me/top/';
-const recommendationsBaseURI = 'https://api.spotify.com/v1/recommendations';
+const userProfileURI = 'https://api.spotify.com/v1/me';
 const topArtists = 'top-artists';
 const topTracks = 'top-tracks';
-const recentGenres = 'recent-genres';
 
-export default async function fetchArtistRecommendations(form: Form) {
-    /* call the appropriate endpoint to retrieve the values for the 
-    seed_artists, seed_genres, or seed_tracks parameters */
-    const recommendationsSeed = await retrieveRecommendationsSeedValues(form);
-    console.log(`RECOMMENDATIONS SEED KEY/VALUE PAIR: ${recommendationsSeed.entries()}`);
-    let localToken = localStorage.getItem('spotify_access_token');
-    console.log('token retrieved in function scope: ' + localToken);
-
-    const params = buildArtistRecommendationsRequestParams(recommendationsSeed, form);
-    const url = `${recommendationsBaseURI}${params}`;
-    const options = {
-        method: 'GET',
-        headers: {'Authorization': `Bearer ${localToken}`}
-    }
-    console.log('URL for recommendations request: ' + url);
-    let response = await fetch(url, options);
-    console.log('recommendations response: ' + JSON.stringify(response!.json()));
+export default async function createPlaylist(formData: PlaylistFormData) {
+    const playlistItems = await retrievePlaylistItems(formData);
+    console.log(`PLAYLIST SEED TYPE: ${playlistItems.seedType} PLAYLIST SEED URIs: ${playlistItems.uris}`);
+    const userId = await retrieveUserId();
+    console.log(`USER ID: ${userId}`);
+    const playlistId = await postPlaylist(userId);
+    console.log(`PLAYLIST ID: ${playlistId}`);
+    await populatePlaylist(playlistId, playlistItems);
+    console.log('SUCCESSFULLY CREATED AND POPULATED NEW PLAYLIST');
 }
 
-async function retrieveRecommendationsSeedValues(form: Form): Promise<Map<string, string>> {
-    const recommendationsSeed = form.recommendationsSeed; 
-    switch (recommendationsSeed) {
+async function retrievePlaylistItems(formData: PlaylistFormData): Promise<PlaylistItems> {
+    const playlistSeed = formData.playlistSeed; 
+    switch (playlistSeed) {
         case topArtists:
-            return retrieveTopArtistIds();
+            return await retrieveTopArtistTracksURIs();
         case topTracks:
-            return retrieveTopTrackIds();
-        case recentGenres:
-            return retrieveRecentGenres();
+            return await retrieveTopTrackURIs();
         default:
-            throw new ValidationError('Please specify what to base your recommendations on (artists, tracks, or genre)');
+            throw new ValidationError('Please specify what to base your new playlist on (artists or tracks)');
     }
 }
 
-async function retrieveTopArtistIds(): Promise<Map<string, string>> {
+async function retrieveTopArtistTracksURIs(): Promise<PlaylistItems> {
     let localToken = localStorage.getItem('spotify_access_token');
-    console.log('token retrieved in function scope: ' + localToken);
     try {
-        const url = `${usersTopItemsBaseURI}artists`;
+        const topArtistsUrl = `${usersTopItemsBaseURI}artists`;
         const options = {
             method: 'GET',
             headers: {'Authorization': `Bearer ${localToken}`}
         }
-        let response = await fetch(url, options);
+        let response = await fetch(topArtistsUrl, options);
         const topArtistsResponse = await response!.json() as UsersTopItems;
         console.log('TOP ARTISTS RESPONSE: ' + JSON.stringify(topArtistsResponse));
-        let topArtistsItems = topArtistsResponse.items;
+        let topArtistsItems = topArtistsResponse.items as TopArtist[];
         verifyTopItemsIsPopulated(topArtistsItems, topArtists);
         topArtistsItems = [...new Set(topArtistsItems)];
-        return new Map([
-            ['seed_artists', mapTopItemIds(topArtistsItems)]
-        ]);
+        let topArtistIds = topArtistsItems.map(
+            item => item.id
+        );
+        let artistsTopTracksURIs = await retrieveArtistsTopTracks(topArtistIds);
+        console.log(`ARTISTS TOP TRACKS URIs: ${artistsTopTracksURIs}`);
+        return {
+            seedType: topArtists,
+            uris: artistsTopTracksURIs
+        }
     } catch (error) {
+        console.error(error);
         throw new Error(`Failed to retrieve your ${topArtists} Please try again.`);
     }
 }
 
-async function retrieveTopTrackIds(): Promise<Map<string, string>> {
+async function retrieveArtistsTopTracks(artistIds: string[]): Promise<string[]> {
     let localToken = localStorage.getItem('spotify_access_token');
-    console.log('token retrieved in function scope: ' + localToken);
+    let artistTopTracksURIs: string[] = []; 
+    for (let index = 0; index < artistIds.length; index++) {
+        const artistId = artistIds[index];
+        try {
+            const artistTopTracksUrl = 'https://api.spotify.com/v1/artists/{id}/top-tracks'.replace('{id}', artistId);
+            const options = {
+                method: 'GET',
+                headers: {'Authorization': `Bearer ${localToken}`}
+            }
+            let response = await fetch(artistTopTracksUrl, options);
+            const artistsTopTracksResponse = await response!.json(); 
+            console.log(`ARTIST TOP TRACKS RESPONSE: ${JSON.stringify(artistsTopTracksResponse)}`);
+            const artistsTopTracksArray = artistsTopTracksResponse.tracks;
+            artistTopTracksURIs.push(artistsTopTracksArray[0].uri);
+            artistTopTracksURIs.push(artistsTopTracksArray[1].uri);
+        } catch (error) {
+            console.error(error);
+            throw new Error('Failed to retrieve the top tracks of one of your top artists');
+        }
+    }
+    return artistTopTracksURIs;
+}
+
+async function retrieveTopTrackURIs(): Promise<PlaylistItems> {
+    let localToken = localStorage.getItem('spotify_access_token');
     try {
         const url = `${usersTopItemsBaseURI}tracks`
         const options = {
@@ -79,70 +97,14 @@ async function retrieveTopTrackIds(): Promise<Map<string, string>> {
         let topTracksItems = topTracksResponse.items;
         verifyTopItemsIsPopulated(topTracksItems, topTracks);
         topTracksItems = [...new Set(topTracksItems)];
-        return new Map([
-            ['seed_tracks', mapTopItemIds(topTracksItems)]
-        ]);
+        let topTracksURIs = topTracksItems.map(item => item.uri);
+        return {
+            seedType: topTracks,
+            uris: topTracksURIs
+        }
     } catch (error) {
         throw new Error(`Failed to retrieve your ${topTracks} Please try again.`);
     }
-}
-
-async function retrieveRecentGenres(): Promise<Map<string, string>> {
-    let localToken = localStorage.getItem('spotify_access_token');
-    console.log('token retrieved in function scope: ' + localToken);
-    try {
-        // genres are attached to artists, so fetching top artists first
-        const url = `${usersTopItemsBaseURI}artists`
-        const options = {
-            method: 'GET',
-            headers: {'Authorization': `Bearer ${localToken}`}
-        }
-        let response = await fetch(url, options);
-        const topArtistsResponse = await response!.json() as UsersTopItems;
-        console.log('TOP ARTISTS RESPONSE: ' + JSON.stringify(topArtistsResponse));
-        let topArtistsItems = topArtistsResponse.items as TopArtist[];
-        verifyTopItemsIsPopulated(topArtistsItems, topArtists);
-        topArtistsItems = [...new Set(topArtistsItems)];
-        let genres = topArtistsItems.slice(0, 5).map(
-            item => item.genres[0]
-        );
-        let uniqueGenres = [...new Set(genres)];
-        return new Map([
-            ['seed_genres', uniqueGenres.map(genre => String(genre)).join(',')]
-        ]);
-    } catch (error) {
-        throw new Error(`Failed to retrieve your ${topArtists} Please try again.`);
-    }
-}
-
-function buildArtistRecommendationsRequestParams(recommendationsSeed: Map<string, string>, form: Form): string {
-    if (!recommendationsSeed) {
-        console.error('recommendations seed map was not populated as expected');
-    }
-    const mapIterator = recommendationsSeed.entries();
-    if (!mapIterator) {
-        console.error('no entries exist in the recommendations seed map');
-    }
-    const firstEntry = mapIterator.next();
-    if (!firstEntry) {
-        console.error('first entry does not exist in the recommendations seed map');
-    }
-    const firstEntryValue = firstEntry.value;
-    if (!firstEntryValue) {
-        console.error('first entry does not have a value in the recommendations seed map');
-    }
-    let params = '?' + firstEntryValue![0] + '=' + firstEntryValue![1];
-    params = params + '&min_popularity=0&max_popularity=100';
-    params = params + '&target_popularity=' + form.popularity.toString();
-    params = params + '&min_danceability=0&max_danceability=1';
-    params = params + '&target_danceability=' + form.danceability.toString();
-    params = params + '&min_energy=0&max_energy=1';
-    params = params + '&target_energy=' + form.energy.toString();
-    params = params + '&min_instrumentalness=0&max_instrumentalness=1';
-    params = params + '&target_instrumentalness=' + form.instrumentalness.toString();
-    console.log('recommendations request params: ' + params);
-    return params;
-    
 }
 
 async function verifyTopItemsIsPopulated(items: TopArtist[] | TopTrack[], topItemType: string): Promise<void> {
@@ -152,9 +114,57 @@ async function verifyTopItemsIsPopulated(items: TopArtist[] | TopTrack[], topIte
     }
 }
 
-function mapTopItemIds(items: TopArtist[] | TopTrack[]): string {
-    return items.slice(0, 5).map(
-        item => item.id
-    ).map(
-        id => String(id)).join(',');
+async function retrieveUserId(): Promise<string> {
+    let localToken = localStorage.getItem('spotify_access_token');
+    try {
+        const url = userProfileURI;
+        const options = {
+            method: 'GET',
+            headers: {'Authorization': `Bearer ${localToken}`}
+        }
+        let response = await fetch(url, options);
+        const userProfileResponse = await response!.json();
+        return userProfileResponse.id; 
+    } catch (error) {
+        throw new Error('Failed to retrieve your user id to create a playlist for you. Please try again.');
+    }
+}
+
+async function postPlaylist(userId: string): Promise<string> {
+    let localToken = localStorage.getItem('spotify_access_token');
+    try {
+        const url = 'https://api.spotify.com/v1/users/{user_id}/playlists'.replace('{user_id}', userId);
+        const options = {
+            method: 'POST',
+            headers: {'Authorization': `Bearer ${localToken}`},
+            body: JSON.stringify({
+                name: 'Tune Curator Generated Playlist',
+                public: false,
+                description: `Playlist generated by the Tune Curator app based on ${userId}'s top items`
+            })
+        }
+        let response = await fetch(url, options);
+        const postPlaylistResponse = await response!.json();
+        return postPlaylistResponse.id; 
+    } catch (error) {
+        throw new Error('Failed to create a playlist for you. Please try again.');
+    }
+}
+
+async function populatePlaylist(playlistId: string, playlistItems: PlaylistItems): Promise<void> {
+    let localToken = localStorage.getItem('spotify_access_token');
+    try {
+        const url = 'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'.replace('{playlist_id}', playlistId);
+        const options = {
+            method: 'POST',
+            headers: {'Authorization': `Bearer ${localToken}`},
+            body: JSON.stringify({
+                uris: playlistItems.uris
+            })
+        }
+        let response = await fetch(url, options);
+        await response!.json();
+    } catch (error) {
+        throw new Error('Failed to populate playlist with your top items.');
+    }
 }
