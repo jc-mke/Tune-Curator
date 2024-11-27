@@ -1,7 +1,7 @@
 // src/App.tsx
 import React from 'react';
 import SpotifyAuthButton from './components/SpotifyAuthButton';
-import RecommendationsForm from './components/RecommendationsForm';
+import PlaylistForm from './components/PlaylistForm';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 const App: React.FC = () => {
@@ -11,7 +11,7 @@ const App: React.FC = () => {
         <Routes>
         <Route path='/' element={<SpotifyAuthButton />} />
 
-        <Route path='/form' element={<RecommendationsForm />} />
+        <Route path='/form' element={<PlaylistForm />} />
         </Routes>
       </div>
     </Router>

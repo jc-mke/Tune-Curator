@@ -1,20 +1,24 @@
-interface AccessTokenResponse {
-    access_token: string;
-    refresh_token: string;
-}
-
 interface UsersTopItems {
     items: TopArtist[] | TopTrack[];
 }
 
 interface TopArtist {
     type: string; // the object type; allowed values are 'artist' and 'track' 
-    id: string; // the Spotify ID of the artist or track, depending on the object type 
+    id: string; // id of the artist that is used to retrieve their top tracks
+    uri: string; // the Spotify URI of the artist or track, depending on the object type 
     genres: string[];
 }
 
 interface TopTrack {
     type: string;
-    id: string;
+    uri: string;
 }
 
+type PlaylistFormData = {
+    playlistSeed: string;
+}
+
+type PlaylistItems = {
+    seedType: 'top-artists' | 'top-tracks';
+    uris: string[];
+}

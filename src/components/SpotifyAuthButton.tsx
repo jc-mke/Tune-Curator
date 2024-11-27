@@ -2,7 +2,7 @@ import React from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID as string;
-const scope = ['user-read-private', 'user-read-email', 'user-top-read'];
+const scope = ['user-read-private', 'user-read-email', 'user-top-read', 'playlist-modify-public', 'playlist-modify-private'];
 
 const SpotifyAuthButton: React.FC = () => {
 
@@ -17,6 +17,7 @@ const SpotifyAuthButton: React.FC = () => {
       const params = new URLSearchParams(urlAfterHash.slice(1));
       const accessToken = params.get('access_token');
       if (accessToken) {
+        console.log('typeof accessToken: ' + typeof(accessToken));
         localStorage.setItem('spotify_access_token', accessToken);
 
         navigate('/form');
