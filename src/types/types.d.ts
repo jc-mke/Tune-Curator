@@ -15,7 +15,9 @@ interface TopTrack {
 }
 
 type PlaylistFormData = {
+    playlistName: string;
     playlistSeed: string;
+    isPublic: boolean
 }
 
 type PlaylistItems = {

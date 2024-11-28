@@ -4,11 +4,19 @@ import createPlaylist from '../service/SpotifyService';
 
 const PlaylistForm: React.FC = () => {
   const [formData, setFormData] = useState<PlaylistFormData>(
-    {playlistSeed: ''}
+    { 
+      playlistName: 'Tune Curator Generated Playlist',
+      playlistSeed: '',
+      isPublic: false
+    }
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({playlistSeed: e.target.value});
+    const {name, value} = e.target;
+    setFormData({
+      ...formData,
+      [name] : value
+    })
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,9 +31,15 @@ const PlaylistForm: React.FC = () => {
         Generate A New Playlist 
       </header>
       <div className="border-2 border-white p-5 rounded-none shadow-lg mb-5">
+        <label htmlFor="playlist-name" className="mr-1 font-bold">Name: </label>
+        <input className="mb-3 text-black" type="text" id="playlist-name" name="playlistName" defaultValue={"Tune Curator Generated Playlist"} size={30} required={true} minLength={1} maxLength={50} onChange={handleChange}></input>
+        <div className="h-10 grid grid-cols-2 content-start space-y-2">
+        <label htmlFor="isPublic" className="ml-10 font-bold">Public: </label>
+        <input className="mr-10 mb-3" type="checkbox" defaultChecked={false} name="isPublic" id="isPublic"></input>
+        </div>
         <fieldset>
-          <legend className="font-bold mb-3">Playlist based on:</legend>
-          <div className="flex flex-col space-y-2">
+          <legend className="font-bold mb-3 text-center">Playlist based on:</legend>
+          <div className="flex flex-col items-center space-y-2">
             <div>
               <input
                 type="radio"
@@ -52,7 +66,7 @@ const PlaylistForm: React.FC = () => {
         </fieldset>
       </div>
 
-      <button className="transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6" type="submit">
+      <button className="transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-3" type="submit">
         Submit
       </button>
     </form>
