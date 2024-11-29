@@ -7,7 +7,8 @@ const PlaylistForm: React.FC = () => {
     { 
       playlistName: 'Tune Curator Generated Playlist',
       playlistSeed: '',
-      isPublic: false
+      isPublic: false,
+      playlistDescription: ''
     }
   );
 
@@ -31,14 +32,14 @@ const PlaylistForm: React.FC = () => {
         Generate A New Playlist 
       </header>
       <div className="border-2 border-white p-5 rounded-none shadow-lg mb-5">
-        <label htmlFor="playlist-name" className="mr-1 font-bold">Name: </label>
-        <input className="mb-3 text-black" type="text" id="playlist-name" name="playlistName" defaultValue={"Tune Curator Generated Playlist"} size={30} required={true} minLength={1} maxLength={50} onChange={handleChange}></input>
-        <div className="h-10 grid grid-cols-2 content-start space-y-2">
+        <label htmlFor="playlistName" className="mr-1 font-bold">Name: </label>
+        <input className="mb-3 text-black" type="text" id="playlistName" name="playlistName" defaultValue={"Tune Curator Generated Playlist"} size={30} required={true} minLength={1} maxLength={50} onChange={handleChange}></input>
         <label htmlFor="isPublic" className="ml-10 font-bold">Public: </label>
-        <input className="mr-10 mb-3" type="checkbox" defaultChecked={false} name="isPublic" id="isPublic"></input>
-        </div>
+        <input className="mr-10 mb-3" type="checkbox" defaultChecked={false} name="isPublic" id="isPublic" onChange={handleChange}></input>
+        <label htmlFor="playlistDescription" className="mr-1 font-bold">Description: </label>
+        <input className="mb-5 text-black" type="text" id="playlistDescription" name="playlistDescription" size={30} onChange={handleChange}></input>
         <fieldset>
-          <legend className="font-bold mb-3 text-center">Playlist based on:</legend>
+          <legend className="font-bold mt-10 mb-3 text-center">Playlist based on:</legend>
           <div className="flex flex-col items-center space-y-2">
             <div>
               <input
@@ -61,6 +62,17 @@ const PlaylistForm: React.FC = () => {
                 onChange={handleChange}
               />
               <label htmlFor="top-tracks-seed">Your Top Tracks</label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                name="playlistSeed"
+                id="new-releases-seed"
+                value="new-releases"
+                className="mr-2"
+                onChange={handleChange}
+              />
+              <label htmlFor="new-releases-seed">New Releases</label>
             </div>
           </div>
         </fieldset>
