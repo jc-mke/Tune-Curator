@@ -26,6 +26,10 @@ interface NewAlbum {
     id: string;
 }
 
+interface Albums {
+    albums: Album[];
+}
+
 interface Album {
     tracks: Tracks;
 }

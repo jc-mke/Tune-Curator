@@ -1,6 +1,11 @@
 // src/components/PlaylistForm.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import createPlaylist from '../service/SpotifyService';
+import NoTopItemsError from '../classes/errors/NoTopItemsError';
+import ValidationError from '../classes/errors/ValidationError';
+import AccessTokenExpiredError from '../classes/errors/AccessTokenExpiredError';
+import NoNewReleasesError from '../classes/errors/NoNewReleasesError';
 
 const PlaylistForm: React.FC = () => {
   const [formData, setFormData] = useState<PlaylistFormData>(
@@ -11,6 +16,9 @@ const PlaylistForm: React.FC = () => {
       playlistDescription: ''
     }
   );
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isTokenExpired, setIsTokenExpired] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {name, value} = e.target;
@@ -22,11 +30,23 @@ const PlaylistForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
-    createPlaylist(formData);
+    console.log(`Submitting the following form to the Spotify Service to create a playlist: ${JSON.stringify(formData)}`);
+      createPlaylist(formData).catch((error) => {
+        if (error instanceof NoTopItemsError 
+          || error instanceof ValidationError
+          || error instanceof NoNewReleasesError) {
+          setErrorMessage(error.message);
+        } else if (error instanceof AccessTokenExpiredError) {
+          setErrorMessage(error.message);
+          setIsTokenExpired(true);
+        } else if (error instanceof Error) {
+          setErrorMessage('Something went wrong. Please try again.');
+        }
+      });
   };
 
   return (
+    <>
     <form className="bg-black flex flex-col items-center" onSubmit={handleSubmit}>
       <header className="text-xl font-semibold font-serif mb-6 text-center">
         Generate A New Playlist 
@@ -82,6 +102,16 @@ const PlaylistForm: React.FC = () => {
         Submit
       </button>
     </form>
+
+{errorMessage !== '' ? (<>
+  <div className="bg-black flex flex-col items-center border-2 border-white p-5 rounded-none shadow-lg mb-5">
+    {<p className='text-lg font-semibold text-red-600'>{errorMessage}</p>}
+    {isTokenExpired ? <button onClick={() => navigate('/')} className='transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6'> 
+      Reauthenticate 
+    </button> : null}
+  </div>
+</>) : null}
+</>
   );
 };
 

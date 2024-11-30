@@ -1,4 +1,6 @@
+import AccessTokenExpiredError from '../classes/errors/AccessTokenExpiredError';
 import NoTopItemsError from '../classes/errors/NoTopItemsError';
+import NoNewReleasesError from '../classes/errors/NoNewReleasesError';
 import ValidationError from '../classes/errors/ValidationError';
 
 const usersTopItemsBaseURI = 'https://api.spotify.com/v1/me/top/';
@@ -28,22 +30,17 @@ async function retrievePlaylistItems(formData: PlaylistFormData): Promise<Playli
         case newReleases: 
             return await retrieveNewTrackURIs();
         default:
-            throw new ValidationError('Please specify what to base your new playlist on (top artist, top tracks, or new releases)');
+            throw new ValidationError('Please specify what to base your new playlist on (top artists, top tracks, or new releases)');
     }
 }
 
 async function retrieveTopArtistTracksURIs(): Promise<PlaylistItems> {
-    try {
-        let topArtistIds = await retrieveTopArtistIds();
-        let artistsTopTracksURIs = await retrieveArtistsTopTracks(topArtistIds);
-        console.log(`ARTISTS TOP TRACKS URIs: ${artistsTopTracksURIs}`);
-        return {
-            seedType: topArtists,
-            uris: artistsTopTracksURIs
-        }
-    } catch (error) {
-        console.error(error);
-        throw new Error(`Failed to retrieve your ${topArtists} Please try again.`);
+    let topArtistIds = await retrieveTopArtistIds();
+    let artistsTopTracksURIs = await retrieveArtistsTopTracks(topArtistIds);
+    console.log(`ARTISTS TOP TRACKS URIs: ${artistsTopTracksURIs}`);
+    return {
+        seedType: topArtists,
+        uris: artistsTopTracksURIs
     }
 }
 
@@ -55,10 +52,11 @@ async function retrieveTopArtistIds() {
         headers: {'Authorization': `Bearer ${localToken}`}
     }
     let response = await fetch(topArtistsUrl, options);
+    await checkForAccessTokenExpiredResponse(response);
     const topArtistsResponse = await response!.json() as UsersTopItems;
     console.log('TOP ARTISTS RESPONSE: ' + JSON.stringify(topArtistsResponse));
     let topArtistsItems = topArtistsResponse.items as TopArtist[];
-    verifyTopItemsIsPopulated(topArtistsItems, topArtists);
+    await verifyTopItemsIsPopulated(topArtistsItems, 'top artists');
     topArtistsItems = [...new Set(topArtistsItems)];
     return topArtistsItems.map(
         item => item.id
@@ -70,48 +68,41 @@ async function retrieveArtistsTopTracks(artistIds: string[]): Promise<string[]> 
     let artistTopTracksURIs: string[] = []; 
     for (let index = 0; index < artistIds.length; index++) {
         const artistId = artistIds[index];
-        try {
             const artistTopTracksUrl = 'https://api.spotify.com/v1/artists/{id}/top-tracks'.replace('{id}', artistId);
             const options = {
                 method: 'GET',
                 headers: {'Authorization': `Bearer ${localToken}`}
             }
             let response = await fetch(artistTopTracksUrl, options);
+            await checkForAccessTokenExpiredResponse(response);
             const artistsTopTracksResponse = await response!.json(); 
             console.log(`ARTIST TOP TRACKS RESPONSE: ${JSON.stringify(artistsTopTracksResponse)}`);
             const artistsTopTracksArray = artistsTopTracksResponse.tracks;
             artistTopTracksURIs.push(artistsTopTracksArray[0].uri);
             artistTopTracksURIs.push(artistsTopTracksArray[1].uri);
-        } catch (error) {
-            console.error(error);
-            throw new Error('Failed to retrieve the top tracks of one of your top artists');
-        }
     }
     return artistTopTracksURIs;
 }
 
 async function retrieveTopTrackURIs(): Promise<PlaylistItems> {
     let localToken = localStorage.getItem('spotify_access_token');
-    try {
         const url = `${usersTopItemsBaseURI}tracks`
         const options = {
             method: 'GET',
             headers: {'Authorization': `Bearer ${localToken}`}
         }
         let response = await fetch(url, options);
+        await checkForAccessTokenExpiredResponse(response);
         const topTracksResponse = await response!.json() as UsersTopItems; 
         console.log('TOP TRACKS RESPONSE: ' + JSON.stringify(topTracksResponse));
         let topTracksItems = topTracksResponse.items;
-        verifyTopItemsIsPopulated(topTracksItems, topTracks);
+        await verifyTopItemsIsPopulated(topTracksItems, 'top tracks');
         topTracksItems = [...new Set(topTracksItems)];
         let topTracksURIs = topTracksItems.map(item => item.uri);
         return {
             seedType: topTracks,
             uris: topTracksURIs
         }
-    } catch (error) {
-        throw new Error(`Failed to retrieve your ${topTracks} Please try again.`);
-    }
 }
 
 async function retrieveNewTrackURIs(): Promise<PlaylistItems> {
@@ -132,6 +123,7 @@ async function retrieveNewReleases() {
         headers: {'Authorization': `Bearer ${localToken}`}
     }
     let response = await fetch(newReleasesUrl, options);
+    await checkForAccessTokenExpiredResponse(response);
     const newReleasesResponse = await response!.json() as NewReleases; 
     console.log('NEW RELEASES RESPONSE: ' + JSON.stringify(newReleasesResponse));
     let newReleasesResponseItems = newReleasesResponse.albums.items;
@@ -148,11 +140,14 @@ async function retrieveTrackURIsFromAlbums(newReleasesAlbumIds: string): Promise
         headers: {'Authorization': `Bearer ${localToken}`}
     }
     let response = await fetch(getSeveralAlbumsUrl, options);
-    const getSeveralAlbumsResponse = await response!.json() as Album[];
+    await checkForAccessTokenExpiredResponse(response);
+    const getSeveralAlbumsResponse = await response!.json() as Albums;
     console.log('GET SEVERAL ALBUMS RESPONSE: ' + JSON.stringify(getSeveralAlbumsResponse));
+    const albums = getSeveralAlbumsResponse.albums;
+    console.log(`ALBUMS ARRAY: ${JSON.stringify(albums)}`);
     let newTrackURIs: string[] = [];
-    for (let index = 0; index < getSeveralAlbumsResponse.length; index++) {
-        const album = getSeveralAlbumsResponse[index];
+    for (let index = 0; index < albums.length; index++) {
+        const album = albums[index];
         const albumTracks = album.tracks;
         let indexOfTrackToRetrieve = Math.floor(Math.random() * albumTracks.total);
         console.log(`indexOfTrackToRetrieve: ${indexOfTrackToRetrieve}`);
@@ -164,36 +159,38 @@ async function retrieveTrackURIsFromAlbums(newReleasesAlbumIds: string): Promise
 async function verifyTopItemsIsPopulated(items: TopArtist[] | TopTrack[], topItemType: string): Promise<void> {
     if (!items || items.length === 0) {
         console.error(`The user does not have any ${topItemType}`);
-        throw new NoTopItemsError(`The user does not have any ${topItemType}`);
+        throw new NoTopItemsError(`You do not have any ${topItemType}. Listen to some music on Spotify, then come back when you have some top items!`);
     }
 }
 
 async function verifyNewReleasesItemsIsPopulated(items: NewAlbum[]): Promise<void> {
     if (!items || items.length === 0) {
         console.error('No new releases were returned');
-        throw new Error('No new releases were returned. Please try another option to generate a playlist.')
+        throw new NoNewReleasesError('No new releases were returned. Please try another option to generate a playlist.')
+    }
+}
+
+async function checkForAccessTokenExpiredResponse(response: Response) {
+    if (response.status === 401) {
+        throw new AccessTokenExpiredError('Access token has expired. Please reauthenticate');
     }
 }
 
 async function retrieveUserId(): Promise<string> {
     let localToken = localStorage.getItem('spotify_access_token');
-    try {
         const url = userProfileURI;
         const options = {
             method: 'GET',
             headers: {'Authorization': `Bearer ${localToken}`}
         }
         let response = await fetch(url, options);
+        await checkForAccessTokenExpiredResponse(response);
         const userProfileResponse = await response!.json();
         return userProfileResponse.id; 
-    } catch (error) {
-        throw new Error('Failed to retrieve your user id to create a playlist for you. Please try again.');
-    }
 }
 
 async function postPlaylist(userId: string, formData: PlaylistFormData): Promise<string> {
     let localToken = localStorage.getItem('spotify_access_token');
-    try {
         const url = 'https://api.spotify.com/v1/users/{user_id}/playlists'.replace('{user_id}', userId);
         const options = {
             method: 'POST',
@@ -205,16 +202,13 @@ async function postPlaylist(userId: string, formData: PlaylistFormData): Promise
             })
         }
         let response = await fetch(url, options);
+        await checkForAccessTokenExpiredResponse(response);
         const postPlaylistResponse = await response!.json();
         return postPlaylistResponse.id; 
-    } catch (error) {
-        throw new Error('Failed to create a playlist for you. Please try again.');
-    }
 }
 
 async function populatePlaylist(playlistId: string, playlistItems: PlaylistItems): Promise<void> {
     let localToken = localStorage.getItem('spotify_access_token');
-    try {
         const url = 'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'.replace('{playlist_id}', playlistId);
         const options = {
             method: 'POST',
@@ -224,8 +218,6 @@ async function populatePlaylist(playlistId: string, playlistItems: PlaylistItems
             })
         }
         let response = await fetch(url, options);
+        await checkForAccessTokenExpiredResponse(response);
         await response!.json();
-    } catch (error) {
-        throw new Error('Failed to populate playlist with your top items.');
-    }
 }
