@@ -14,11 +14,43 @@ interface TopTrack {
     uri: string;
 }
 
+interface NewReleases {
+    albums: NewAlbums;
+}
+
+interface NewAlbums {
+    items: NewAlbum[];
+}
+
+interface NewAlbum {
+    id: string;
+}
+
+interface Albums {
+    albums: Album[];
+}
+
+interface Album {
+    tracks: Tracks;
+}
+
+interface Tracks {
+    total: number;
+    items: Track[];
+}
+
+interface Track {
+    uri: string;
+}
+
 type PlaylistFormData = {
+    playlistName: string;
     playlistSeed: string;
+    isPublic: boolean;
+    playlistDescription: string;
 }
 
 type PlaylistItems = {
-    seedType: 'top-artists' | 'top-tracks';
+    seedType: 'top-artists' | 'top-tracks' | 'new-releases';
     uris: string[];
 }
