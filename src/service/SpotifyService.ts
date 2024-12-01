@@ -9,7 +9,7 @@ const topArtists = 'top-artists';
 const topTracks = 'top-tracks';
 const newReleases = 'new-releases';
 
-export default async function createPlaylist(formData: PlaylistFormData) {
+export default async function createPlaylist(formData: PlaylistFormData): Promise<string> {
     const playlistItems = await retrievePlaylistItems(formData);
     console.log(`PLAYLIST SEED TYPE: ${playlistItems.seedType} PLAYLIST SEED URIs: ${playlistItems.uris}`);
     const userId = await retrieveUserId();
@@ -18,6 +18,7 @@ export default async function createPlaylist(formData: PlaylistFormData) {
     console.log(`PLAYLIST ID: ${playlistId}`);
     await populatePlaylist(playlistId, playlistItems);
     console.log('SUCCESSFULLY CREATED AND POPULATED NEW PLAYLIST');
+    return playlistId;
 }
 
 async function retrievePlaylistItems(formData: PlaylistFormData): Promise<PlaylistItems> {
@@ -163,7 +164,7 @@ async function verifyTopItemsIsPopulated(items: TopArtist[] | TopTrack[], topIte
     }
 }
 
-async function verifyNewReleasesItemsIsPopulated(items: NewAlbum[]): Promise<void> {
+async function verifyNewReleasesItemsIsPopulated(items: NewReleasesAlbum[]): Promise<void> {
     if (!items || items.length === 0) {
         console.error('No new releases were returned');
         throw new NoNewReleasesError('No new releases were returned. Please try another option to generate a playlist.')
@@ -220,4 +221,16 @@ async function populatePlaylist(playlistId: string, playlistItems: PlaylistItems
         let response = await fetch(url, options);
         await checkForAccessTokenExpiredResponse(response);
         await response!.json();
+}
+
+export async function getCreatedPlaylist(playlistId: string): Promise<Playlist> {
+    let localToken = localStorage.getItem('spotify_access_token');
+    const url = 'https://api.spotify.com/v1/playlists/{playlist_id}'.replace('{playlist_id}', playlistId);
+    const options = {
+        method: 'GET',
+        headers: {'Authorization': `Bearer ${localToken}`}
+    }
+    let response = await fetch(url, options);
+    await checkForAccessTokenExpiredResponse(response);
+    return await response!.json();
 }

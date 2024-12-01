@@ -1,6 +1,7 @@
 // src/components/PlaylistForm.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PlaylistView from './PlaylistView';
 import createPlaylist from '../service/SpotifyService';
 import NoTopItemsError from '../classes/errors/NoTopItemsError';
 import ValidationError from '../classes/errors/ValidationError';
@@ -18,6 +19,7 @@ const PlaylistForm: React.FC = () => {
   );
   const [errorMessage, setErrorMessage] = useState('');
   const [isTokenExpired, setIsTokenExpired] = useState(false);
+  const [playlistId, setPlaylistId] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +33,8 @@ const PlaylistForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log(`Submitting the following form to the Spotify Service to create a playlist: ${JSON.stringify(formData)}`);
-      createPlaylist(formData).catch((error) => {
+      createPlaylist(formData)
+      .catch((error) => {
         if (error instanceof NoTopItemsError 
           || error instanceof ValidationError
           || error instanceof NoNewReleasesError) {
@@ -42,10 +45,16 @@ const PlaylistForm: React.FC = () => {
         } else if (error instanceof Error) {
           setErrorMessage('Something went wrong. Please try again.');
         }
+      })
+      .then((newPlaylistId) => {
+        if (newPlaylistId) {
+          setPlaylistId(newPlaylistId);
+        }
       });
   };
 
   return (
+    playlistId === '' ? 
     <>
     <form className="bg-black flex flex-col items-center" onSubmit={handleSubmit}>
       <header className="text-xl font-semibold font-serif mb-6 text-center">
@@ -103,15 +112,19 @@ const PlaylistForm: React.FC = () => {
       </button>
     </form>
 
-{errorMessage !== '' ? (<>
-  <div className="bg-black flex flex-col items-center border-2 border-white p-5 rounded-none shadow-lg mb-5">
-    {<p className='text-lg font-semibold text-red-600'>{errorMessage}</p>}
-    {isTokenExpired ? <button onClick={() => navigate('/')} className='transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6'> 
-      Reauthenticate 
-    </button> : null}
-  </div>
-</>) : null}
-</>
+    {errorMessage !== '' ? (<>
+      <div className="bg-black flex flex-col items-center border-2 border-white p-5 rounded-none shadow-lg mb-5">
+      {<p className='text-lg font-semibold text-red-600'>{errorMessage}</p>}
+      {isTokenExpired ? <button onClick={() => navigate('/')} className='transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6'> 
+        Reauthenticate 
+      </button> : null}
+      </div>
+    </>) : null}
+  </>
+  :
+  <>
+  <PlaylistView playlistId={playlistId}></PlaylistView>
+  </>
   );
 };
 

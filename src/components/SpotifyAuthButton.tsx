@@ -12,7 +12,7 @@ const SpotifyAuthButton: React.FC = () => {
     window.location.assign(`https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=http://localhost:3000&scope=${scope}&response_type=token&show_dialog=true`);
   }
 
-   async function getAccessTokenFromURL(urlAfterHash: string) {
+    function getAccessTokenFromURL(urlAfterHash: string) {
       console.log(urlAfterHash);
       const params = new URLSearchParams(urlAfterHash.slice(1));
       const accessToken = params.get('access_token');
