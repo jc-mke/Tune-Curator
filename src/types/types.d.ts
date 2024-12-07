@@ -15,14 +15,14 @@ interface TopTrack {
 }
 
 interface NewReleases {
-    albums: NewAlbums;
+    albums: NewReleasesAlbums;
 }
 
-interface NewAlbums {
-    items: NewAlbum[];
+interface NewReleasesAlbums {
+    items: NewReleasesAlbum[];
 }
 
-interface NewAlbum {
+interface NewReleasesAlbum {
     id: string;
 }
 
@@ -40,7 +40,31 @@ interface Tracks {
 }
 
 interface Track {
+    name: string;
     uri: string;
+    artists: PlaylistTrackArtist[];
+}
+
+interface Playlist {
+    external_urls: PlaylistExternalUrl;
+    images: PlaylistImage[];
+    name: string;
+    description: string | null;
+    tracks: Tracks;
+}
+
+interface PlaylistExternalUrl {
+    spotify: string;
+}
+
+interface PlaylistImage {
+    url: string;
+    height: string;
+    width: string;
+}
+
+interface PlaylistTrackArtist {
+    name: string;
 }
 
 type PlaylistFormData = {
@@ -53,4 +77,13 @@ type PlaylistFormData = {
 type PlaylistItems = {
     seedType: 'top-artists' | 'top-tracks' | 'new-releases';
     uris: string[];
+}
+
+type ErrorMessagesProps = {
+    message: string;
+    isTokenExpired: boolean;
+}
+
+type PlaylistViewProps = {
+    playlistId: string;
 }

@@ -10,7 +10,6 @@ const App: React.FC = () => {
       <div className="bg-black text-white p-4 min-h-screen">
         <Routes>
         <Route path='/' element={<SpotifyAuthButton />} />
-
         <Route path='/form' element={<PlaylistForm />} />
         </Routes>
       </div>
