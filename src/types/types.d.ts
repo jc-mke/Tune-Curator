@@ -49,6 +49,7 @@ interface Playlist {
     external_urls: PlaylistExternalUrl;
     images: PlaylistImage[];
     name: string;
+    description: string | null;
     tracks: Tracks;
 }
 
@@ -76,6 +77,11 @@ type PlaylistFormData = {
 type PlaylistItems = {
     seedType: 'top-artists' | 'top-tracks' | 'new-releases';
     uris: string[];
+}
+
+type ErrorMessagesProps = {
+    message: string;
+    isTokenExpired: boolean;
 }
 
 type PlaylistViewProps = {
