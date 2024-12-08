@@ -2,6 +2,7 @@
 import React from 'react';
 import SpotifyAuthButton from './components/SpotifyAuthButton';
 import PlaylistForm from './components/PlaylistForm';
+import PlaylistView from './components/PlaylistView';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 const App: React.FC = () => {
@@ -11,6 +12,7 @@ const App: React.FC = () => {
         <Routes>
         <Route path='/' element={<SpotifyAuthButton />} />
         <Route path='/form' element={<PlaylistForm />} />
+        <Route path="/playlist/:playlistId" element={<PlaylistView />} />
         </Routes>
       </div>
     </Router>
