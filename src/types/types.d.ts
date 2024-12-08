@@ -50,7 +50,7 @@ interface Playlist {
     images: PlaylistImage[];
     name: string;
     description: string | null;
-    tracks: Tracks;
+    tracks: PlaylistTracks;
 }
 
 interface PlaylistExternalUrl {
@@ -61,6 +61,20 @@ interface PlaylistImage {
     url: string;
     height: string;
     width: string;
+}
+
+interface PlaylistTracks {
+    total: number;
+    items: PlaylistTrack[];
+}
+
+interface PlaylistTrack {
+    track: PlaylistTrackObject;
+}
+
+interface PlaylistTrackObject {
+    name: string;
+    id: number;
 }
 
 interface PlaylistTrackArtist {
@@ -82,8 +96,4 @@ type PlaylistItems = {
 type ErrorMessagesProps = {
     message: string;
     isTokenExpired: boolean;
-}
-
-type PlaylistViewProps = {
-    playlistId: string;
 }

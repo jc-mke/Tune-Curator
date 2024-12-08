@@ -32,9 +32,9 @@ const SpotifyAuthButton: React.FC = () => {
    });
 
   return (
-    <div>
+    <div className="border-2 border-white p-5 rounded-none shadow-lg flex flex-col items-center">
         <>
-          <p className='font-semibold font-serif mb-6 text-center'>Please authorize access to your top items on Spotify</p>
+          <p className='font-semibold font-serif mb-3 text-xl text-center'>Please authorize access to your top items on Spotify</p>
           <button onClick={authorize} className='transition-all duration-300 hover:bg-slate-500 rounded-full p-3 text-lg font-semibold mt-6'> Authorize
           </button>
         </>
